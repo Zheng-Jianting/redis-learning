@@ -2,7 +2,7 @@
 
 在 Redis 中，用户可以通过执行 _SLAVEOF_ 命令或者设置 slaveof 选项，让一个服务器去复制 ( replicate ) 另一个服务器，我们称呼被复制的服务器为主服务器 ( master )，而对主服务器进行复制的服务器则被称为从服务器 ( slave )
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220502203130862.png" alt="image-20220502203130862" style="zoom:80%;" />
+<div align="center"> <img width="26%" src="https://api.zhengjianting.com/picture?name=replication_15-1"/> </div> <br>
 
 假设现在有两个 Redis 服务器，地址分别为 127.0.0.1:6379 和 127.0.0.1:12345，如果我们向服务器 127.0.0.1:12345 发送以下命令：
 
@@ -32,9 +32,9 @@ Redis 的复制功能分为同步 ( sync ) 和命令传播 ( command propagate )
 - 当主服务器的 _BGSAVE_ 命令执行完毕时，主服务器会将 _BGSAVE_ 命令生成的 RDB 文件发送给从服务器，从服务器接收并载入这个 RDB 文件，将自己的数据库状态更新至主服务器执行 _BGSAVE_ 命令时的数据库状态
 - 主服务器将记录在缓冲区里面的所有写命令发送给从服务器，从服务器执行这些写命令，将自己的数据库状态更新至主服务器数据库当前所处的状态
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220502205200566.png" alt="image-20220502205200566" style="zoom:80%;" />
+<div align="center"> <img width="42%" src="https://api.zhengjianting.com/picture?name=replication_15-2"/> </div> <br>
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220502205739453.png" alt="image-20220502205739453" style="zoom:80%;" />
+<div align="center"> <img width="67%" src="https://api.zhengjianting.com/picture?name=replication_table_15-1"/> </div> <br>
 
 **1.2 命令传播**
 
@@ -51,7 +51,7 @@ Redis 的复制功能分为同步 ( sync ) 和命令传播 ( command propagate )
 
 对于初次复制来说，旧版复制功能能够很好地完成任务，但对于断线后重复制来说，旧版复制功能虽然也能让主从服务器重新回到一致状态，但效率非常低，例如：
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220502211158443.png" alt="image-20220502211158443" style="zoom:80%;" />
+<div align="center"> <img width="67%" src="https://api.zhengjianting.com/picture?name=replication_table_15-2"/> </div> <br>
 
 在时间 T10091，从服务器终于重新连接上主服务器，因为这时主从服务器的状态已经不再一致，所以从服务器将向主服务器发送 _SYNC_ 命令，而主服务器会将包含键 k1 至键 k10089 的 RDB 文件发送欸从服务器，从服务器通过接收和载入这个 RDB 文件来将自己的数据库更新至主服务器数据库当前所处的状态
 
@@ -72,9 +72,9 @@ _PSYNC_ 命令具有完整重同步 ( full resynchronization ) 和部分重同�
 
 _PSYNC_ 命令的部分重同步模式解决了旧版复制功能在处理断线后重复制时出现的低效情况，下表展示了如何使用 _PSYNC_ 命令高效地处理上一节展示的断线后复制情况：
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220502214442720.png" alt="image-20220502214442720" style="zoom:80%;" />
+<div align="center"> <img width="67%" src="https://api.zhengjianting.com/picture?name=replication_table_15-3"/> </div> <br>
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220502214829893.png" alt="image-20220502214829893" style="zoom:80%;" />
+<div align="center"> <img width="30%" src="https://api.zhengjianting.com/picture?name=replication_15-6"/> </div> <br>
 
 对比一下 _SYNC_ 命令和 _PSYNC_  命令处理断线重复制的方法，不难看出，虽然 _SYNC_ 命令和 _PSYNC_ 命令都可以让断线的主从服务器重新回到一致状态，但执行部分重同步所需的资源比起执行 _SYNC_ 命令所需的资源要少得多，完成同步的速度也快得多。执行 _SYNC_ 命令需要生成、传送和载入整个 RDB 文件，而部分重同步只需要将从服务器缺少的写命令发送给从服务器执行就可以了
 
@@ -93,11 +93,11 @@ _PSYNC_ 命令的部分重同步模式解决了旧版复制功能在处理断线
 - 主服务器每次向从服务器传播 N 个字节的数据时，就将自己的复制偏移量的值加上 N
 - 从服务器每次收到主服务器传播来的 N 个字节的数据时，就将自己的复制偏移量的值加上 N
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220502221024406.png" alt="image-20220502221024406" style="zoom:80%;" />
+<div align="center"> <img width="30%" src="https://api.zhengjianting.com/picture?name=replication_15-7"/> </div> <br>
 
 如果这时主服务器向三个从服务器传播长度为 33 字节的数据，那么主服务器的复制偏移量将更新为 10086 + 33 = 10119，而三个从服务器在接收到主服务器传播的数据之后，也会将复制偏移量更新为 10119：
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220502221228764.png" alt="image-20220502221228764" style="zoom:80%;" />
+<div align="center"> <img width="45%" src="https://api.zhengjianting.com/picture?name=replication_15-8"/> </div> <br>
 
 通过对比主从服务器的复制偏移量，程序可以很容易地直到主从服务器是否处于一致状态：
 
@@ -106,7 +106,7 @@ _PSYNC_ 命令的部分重同步模式解决了旧版复制功能在处理断线
 
 例如，主从服务器当前的复制偏移量都为 10086，但是就在主服务器要向从服务器传播长度为 33 字节的数据之前，从服务器 A 断线了，那么主服务器传播的数据将只有从服务器 B 和从服务器 C 能收到，在这之后，主服务器、从服务器 B 和从服务器 C 三个服务器的复制偏移量都将更新为 10119，而断线的从服务器 A 的复制偏移量仍然停留在 10086，这说明从服务器 A 与主服务器并不一致：
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220502222016634.png" alt="image-20220502222016634" style="zoom:80%;" />
+<div align="center"> <img width="45%" src="https://api.zhengjianting.com/picture?name=replication_15-9"/> </div> <br>
 
 假设从服务器 A 在断线之后就立即重新连接主服务器，并且成功，那么接下来，从服务器将向主服务器发送 _PSYNC_ 命令，报告从服务器 A 当前的复制偏移量为 10086，那么这时，主服务器应该对从服务器执行完整重同步还是部分重同步呢？如果执行部分重同步的话，主服务器又如何补偿从服务器 A 在断线期间丢失的那部分数据呢？以上问题的答案都和复制积压缓冲区有关
 
@@ -114,15 +114,15 @@ _PSYNC_ 命令的部分重同步模式解决了旧版复制功能在处理断线
 
 复制积压缓冲区是由主服务器维护的一个固定长度 ( fixed-size ) 先进先出 ( FIFO ) 队列，默认大小为 1MB
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220502234400758.png" alt="image-20220502234400758" style="zoom:80%;" />
+<div align="center"> <img width="65%" src="https://api.zhengjianting.com/picture?name=replication_other_15-1"/> </div> <br>
 
 当主服务器进行命令传播时，它不仅会将写命令发送给所有从服务器，还会将写命令入队到复制积压缓冲区里面，如图所示：
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220502234610127.png" alt="image-20220502234610127" style="zoom:80%;" />
+<div align="center"> <img width="47%" src="https://api.zhengjianting.com/picture?name=replication_15-10"/> </div> <br>
 
 因此，主服务器的复制积压缓冲区里面会保存着一部分最近传播的写命令，并且复制积压缓冲区会为队列中的每个字节记录相应的复制偏移量，如下表所示：
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220502234830645.png" alt="image-20220502234830645" style="zoom:80%;" />
+<div align="center"> <img width="67%" src="https://api.zhengjianting.com/picture?name=replication_table_15-4"/> </div> <br>
 
 当从服务器重新连上主服务器时，从服务器会通过 _PSYNC_ 命令将自己的复制偏移量 offset 发送给主服务器，主服务器会根据这个复制偏移量来决定对从服务器执行何种同步操作：
 
@@ -136,9 +136,9 @@ _PSYNC_ 命令的部分重同步模式解决了旧版复制功能在处理断线
 - 接着主服务器会将复制积压缓冲区 10086 偏移量之后的所有数据 ( 偏移量为 10087 至 10119 ) 都发送给从服务器
 - 从服务器只要接收这 33 字节的缺失数据，就可以回到与主服务器一致的状态，如图所示：
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220503000136945.png" alt="image-20220503000136945" style="zoom:80%;" />
+<div align="center"> <img width="42%" src="https://api.zhengjianting.com/picture?name=replication_15-11"/> </div> <br>
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220503000156644.png" alt="image-20220503000156644" style="zoom:80%;" />
+<div align="center"> <img width="67%" src="https://api.zhengjianting.com/picture?name=replication_other_15-2"/> </div> <br>
 
 **4.3 服务器运行 ID**
 
@@ -169,7 +169,7 @@ _PSYNC_ 命令的调用方式有两种：
 
 以下流程图总结了 _PSYNC_ 命令执行完整重同步和部分重同步时可能遇上的情况：
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220503171055180.png" alt="image-20220503171055180" style="zoom:80%;" />
+<div align="center"> <img width="47%" src="https://api.zhengjianting.com/picture?name=replication_15-12"/> </div> <br>
 
 - 主服务器返回 +CONTINUE 的情况：runid 是从服务器之前复制的主服务器运行 ID，并且 offset 之后的数据都还存在于该主服务器的复制积压缓冲区中
 - 主服务器返回 +FULLRESYNC 的情况：
@@ -205,13 +205,13 @@ _SLAVEOF_ 命令是一个异步命令，在完成 masterhost 属性和 masterpor
 
 在 _SLAVEOF_ 命令执行之后，从服务器将根据命令所设置的 IP 地址和端口，创建连向主服务器的套接字连接，如图所示：
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220503172210466.png" alt="image-20220503172210466" style="zoom:80%;" />
+<div align="center"> <img width="32%" src="https://api.zhengjianting.com/picture?name=replication_15-14"/> </div> <br>
 
 如果从服务器创建的套接字能成功连接 ( connect ) 到主服务器，那么从服务器将为这个套接字关联一个专门用于处理复制工作的文件事件处理器，这个处理器将负责执行后续的复制工作，比如接收 RDB 文件，以及接收主服务器传播来的写命令，诸如此类
 
 而主服务器在接受 ( accept ) 从服务器的套接字连接之后，将为该套接字创建相应的客户端状态，并将从服务器看作是一个连接到主服务器的客户端来对待，这时从服务器将具有服务器 ( server ) 和客户端 ( client ) 两个身份：从服务器可以向主服务器发送命令请求，而主服务器则会向从服务器返回命令回复，如图所示：
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220503172806486.png" alt="image-20220503172806486" style="zoom:80%;" />
+<div align="center"> <img width="36%" src="https://api.zhengjianting.com/picture?name=replication_15-15"/> </div> <br>
 
 因为复制工作接下来的几个步骤都会以从服务器向主服务器发送命令请求的形式来进行，所以理解 "从服务器是主服务器的客户端" 这一点非常重要
 
@@ -224,7 +224,7 @@ _SLAVEOF_ 命令是一个异步命令，在完成 masterhost 属性和 masterpor
 
 以下流程图总结了从服务器在发送 _PING_ 命令时可能遇到的情况，以及各个情况的处理方式：
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220503173618135.png" alt="image-20220503173618135" style="zoom:80%;" />
+<div align="center"> <img width="37%" src="https://api.zhengjianting.com/picture?name=replication_15-17"/> </div> <br>
 
 **6.4 步骤 4：身份验证**
 
@@ -235,13 +235,13 @@ _SLAVEOF_ 命令是一个异步命令，在完成 masterhost 属性和 masterpor
 
 在需要进行身份验证的情况下，从服务器将向主服务器发送一条 _AUTH_ 命令，命令的参数为从服务器 masterauth 选项的值，例如从服务器 masterauth 选项的值为 10086，那么从服务器将向主服务器发送命令 AUTH 10086：
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220503174458140.png" alt="image-20220503174458140" style="zoom:80%;" />
+<div align="center"> <img width="32%" src="https://api.zhengjianting.com/picture?name=replication_15-18"/> </div> <br>
 
 主服务器通过设置 requirepass 选项设置密码，从服务器通过设置 masterauth 选项设置密码
 
 以下流程图总结了从服务器在身份验证阶段可能遇到的情况，以及各个情况的处理方式：
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220503174644179.png" alt="image-20220503174644179" style="zoom:80%;" />
+<div align="center"> <img width="48%" src="https://api.zhengjianting.com/picture?name=replication_15-19"/> </div> <br>
 
 **6.5 步骤 5：发送端口信息**
 
@@ -249,7 +249,7 @@ _SLAVEOF_ 命令是一个异步命令，在完成 masterhost 属性和 masterpor
 
 例如，从服务器的监听端口为 12345，那么从服务器将向主服务器发送命令 REPLCONF listening-port 12345，如图所示：
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220503175022544.png" alt="image-20220503175022544" style="zoom:80%;" />
+<div align="center"> <img width="43%" src="https://api.zhengjianting.com/picture?name=replication_15-20"/> </div> <br>
 
 主服务器在接收到这个命令之后，会将端口号记录在从服务器所对应的客户端状态的 slave_listening_port 属性中：
 
@@ -274,7 +274,7 @@ slave_listening_port 属性目前唯一的作用就是在主服务器执行 INFO
 
 因此，在同步操作执行之后，主从服务器双方都是对方的客户端，它们可以互相向对方发送命令请求，或者互相向对方返回命令回复，如图所示：
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220503195708052.png" alt="image-20220503195708052" style="zoom:80%;" />
+<div align="center"> <img width="42%" src="https://api.zhengjianting.com/picture?name=replication_15-22"/> </div> <br>
 
 正因为主服务器成为了从服务器的客户端，所以主服务器才可以通过发送写命令来改变从服务器的数据库状态，不仅同步操作需要用到这一点，这也是主服务器对从服务器执行命令传播操作的基础
 
@@ -325,3 +325,126 @@ min-slaves-max-lag 10
 
 注意，主服务器向从服务器补发缺失数据这一操作的原理和部分重同步操作的原理非常相似，这两个操作的区别在于，补发缺失数据操作在主从服务器没有断线的情况下执行，而部分重同步操作则在主从服务器断线并重连之后执行
 
+
+
+## 配置
+
+在一台虚拟机中启动 3 个 redis 进程，其中运行在 6379 端口的 redis 进程作为主服务器，运行在 6380 和 6381 端口的 redis 进程作为从服务器
+
+**1. 修改配置文件**
+
+```shell
+# 为 3 个 redis 进程分别创建一个目录
+mkdir ~/redis_replication/redis_6379
+mkdir ~/redis_replication/redis_6380
+mkdir ~/redis_replication/redis_6381
+
+# 为运行在 6379 端口的 redis 进程 (Master) 新建 redis.conf
+vim ~/redis_replication/redis_6379/redis.conf
+include /etc/redis.conf # 以 /etc/redis.conf 作为模板
+port 6379
+pidfile /var/run/redis_6379.pid # 当服务器运行多个 redis 进程时, 配置文件需要指定不同的 pidfile
+logfile /home/zjt/redis_replication/redis_6379/redis_log
+dbfilename dump_6379.rdb
+
+# 为运行在 6380 端口的 redis 进程 (Slave1) 新建 redis.conf
+vim ~/redis_replication/redis_6380/redis.conf
+include /etc/redis.conf
+port 6380
+pidfile /var/run/redis_6380.pid
+logfile /home/zjt/redis_replication/redis_6380/redis_log
+dbfilename dump_6380.rdb
+
+# 为运行在 6381 端口的 redis 进程 (Slave2) 新建 redis.conf
+vim ~/redis_replication/redis_6381/redis.conf
+include /etc/redis.conf
+port 6381
+pidfile /var/run/redis_6381.pid
+logfile /home/zjt/redis_replication/redis_6381/redis_log
+dbfilename dump_6381.rdb
+```
+
+**2. 启动 3 个 redis 进程**
+
+```shell
+cd ~/redis_replication/redis_6379
+redis-server redis.conf
+
+cd ~/redis_replication/redis_6380
+redis-server redis.conf
+
+cd ~/redis_replication/redis_6381
+redis-server redis.conf
+```
+
+**3. 启动 3 个 redis 客户端**
+
+```shell
+cd ~/redis_replication/redis_6379
+redis-cli -h 127.0.0.1 -p 6379
+
+cd ~/redis_replication/redis_6380
+redis-cli -h 127.0.0.1 -p 6380
+
+cd ~/redis_replication/redis_6381
+redis-cli -h 127.0.0.1 -p 6381
+```
+
+**4. 复制**
+
+```shell
+127.0.0.1:6380> slaveof 127.0.0.1 6379
+127.0.0.1:6381> slaveof 127.0.0.1 6379
+```
+
+**5. 查看复制状态信息**
+
+<div align="center"> <img width="46%" src="https://api.zhengjianting.com/picture?name=replication_info_1"/> </div> <br>
+
+<div align="center"> <img width="46%" src="https://api.zhengjianting.com/picture?name=replication_info_2"/> </div> <br>
+
+<div align="center"> <img width="46%" src="https://api.zhengjianting.com/picture?name=replication_info_3"/> </div> <br>
+
+**6. 断开复制**
+
+_slaveof_ 命令不但可以建立复制，还可以在从服务器执行 _slaveof no one_ 来断开与主服务器的复制关系，例如在 6380 节点上执行 _slaveof no one_ 来断开复制，如图所示：
+
+<div align="center"> <img width="47%" src="https://api.zhengjianting.com/picture?name=replication_6-2"/> </div> <br>
+
+断开复制主要流程：
+
+- 断开与主节点复制关系
+- 从节点晋升为主节点
+
+从节点断开复制后并不会抛弃原有数据，只是无法再获取主节点上的数据变化
+
+**7. 切换主节点**
+
+通过 _slaveof_ 命令还可以实现切主操作，即把当前从节点对主节点的复制切换到另一个主节点，例如把 6380 节点从原来的复制 6379 节点变为复制 6381 节点，如图所示：
+
+<div align="center"> <img width="46%" src="https://api.zhengjianting.com/picture?name=replication_6-3"/> </div> <br>
+
+切主操作流程如下：
+
+- 断开与旧主节点复制关系
+- 与新主节点建立复制关系
+- 删除从节点当前所有数据
+- 对新主节点进行复制操作
+
+此时 6380 节点复制 6381 节点，6381 节点复制 6379 节点，复制状态信息如下：
+
+<div align="center"> <img width="46%" src="https://api.zhengjianting.com/picture?name=replication_info_4"/> </div> <br>
+
+<div align="center"> <img width="46%" src="https://api.zhengjianting.com/picture?name=replication_info_5"/> </div> <br>
+
+<div align="center"> <img width="46%" src="https://api.zhengjianting.com/picture?name=replication_info_6"/> </div> <br>
+
+注意切主后从节点会清空之前所有的数据，线上人工操作时小写 _slaveof_ 在错误的节点上执行或者指向错误的主节点
+
+
+
+## 参考
+
+《 Redis 设计与实现 》
+
+《 Redis 开发与运维 》

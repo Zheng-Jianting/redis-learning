@@ -2,7 +2,7 @@
 
 除了 RDB 持久化功能之外，Redis 还提供了 AOF ( Append Only File ) 持久化功能，与 RDB 持久化通过保存数据库中的键值对来记录数据库状态不同，AOF 持久化是通过保存 Redis 服务器所执行的写命令来记录数据库状态的：
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220501182001504.png" alt="image-20220501182001504" style="zoom:80%;" />
+<img src="../picture/aof/image-20220501182001504.png" alt="image-20220501182001504" style="zoom:80%;" />
 
 有关 AOF 持久化的相关配置位于 redis.conf 配置文件中的 APPEND ONLY MODE 部分
 
@@ -83,7 +83,7 @@ Redis 读取 AOF 文件并还原数据库状态的详细步骤如下：
 - 使用伪客户端执行被读出的写命令
 - 重复执行步骤 2 和步骤 3，直到 AOF 文件中的所有写命令都被处理完毕为止
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220501215500356.png" alt="image-20220501215500356" style="zoom:80%;" />
+<img src="../picture/aof/image-20220501215500356.png" alt="image-20220501215500356" style="zoom:80%;" />
 
 **3. AOF 重写**
 

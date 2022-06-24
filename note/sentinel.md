@@ -4,7 +4,7 @@ Sentinel ( 哨岗、哨兵 ) 是 Redis 高可用性 ( high availability ) 解决
 
 下图展示了一个 Sentinel 系统监视服务器的例子，其中：
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220504220914795.png" alt="image-20220504220914795" style="zoom:80%;" />
+<img src="../picture/sentinel/image-20220504220914795.png" alt="image-20220504220914795" style="zoom:80%;" />
 
 - 用双环图案表示的是当前的主服务器 server1
 - 用单环图案表示的是主服务器的三个从服务器 server2、server3 以及 server4
@@ -12,7 +12,7 @@ Sentinel ( 哨岗、哨兵 ) 是 Redis 高可用性 ( high availability ) 解决
 
 假设这时，主服务器 server1 进入下线状态，那么从服务器 server2、server3、server4 对主服务器的复制操作将被中止，并且 Sentinel 系统会察觉到 server1 已下线，如图所示 ( 下线的服务器用序线表示 )：
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220504221120066.png" alt="image-20220504221120066" style="zoom:80%;" />
+<img src="../picture/sentinel/image-20220504221120066.png" alt="image-20220504221120066" style="zoom:80%;" />
 
 当 server1 的下线时长超过用户设定的下线时长上限时，Sentinel 系统就会对 server1 执行故障转移操作：
 
@@ -22,11 +22,11 @@ Sentinel ( 哨岗、哨兵 ) 是 Redis 高可用性 ( high availability ) 解决
 
 例如，下图展示了 Sentinel 系统将 server2 升级为新的主服务器，并让服务器 server3 和 server4 成为 server2 的从服务器的过程：
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220504221721485.png" alt="image-20220504221721485" style="zoom:80%;" />
+<img src="../picture/sentinel/image-20220504221721485.png" alt="image-20220504221721485" style="zoom:80%;" />
 
 之后，如果 server1 重新上线的话，它将被 Sentinel 系统降级为 server2 的从服务器，如图所示：
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220504221820306.png" alt="image-20220504221820306" style="zoom:80%;" />
+<img src="../picture/sentinel/image-20220504221820306.png" alt="image-20220504221820306" style="zoom:80%;" />
 
 **1. 启动并初始化 Sentinel**
 
@@ -52,7 +52,7 @@ Sentinel 本质只是一个运行在特殊模式下的 Redis 服务器，所以�
 
 下表展示了 Redis 服务器在 Sentinel 模式下运行时，服务器各个主要功能的使用情况：
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220504222722596.png" alt="image-20220504222722596" style="zoom:80%;" />
+<img src="../picture/sentinel/image-20220504222722596.png" alt="image-20220504222722596" style="zoom:80%;" />
 
 **1.2 使用 Sentinel 专用代码**
 
@@ -204,13 +204,13 @@ sentinel failover-timeout master2 450000
 
 那么 master1 和 master2 对应的实例结构分别为：
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220505142933482.png" alt="image-20220505142933482" style="zoom:67%;" />
+<img src="../picture/sentinel/image-20220505142933482.png" alt="image-20220505142933482" style="zoom:67%;" />
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220505142949731.png" alt="image-20220505142949731" style="zoom:67%;" />
+<img src="../picture/sentinel/image-20220505142949731.png" alt="image-20220505142949731" style="zoom:67%;" />
 
 而这两个实例结构又会被保存到 Sentinel 状态的 master 字典中，如图所示：
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220505143052003.png" alt="image-20220505143052003" style="zoom:67%;" />
+<img src="../picture/sentinel/image-20220505143052003.png" alt="image-20220505143052003" style="zoom:67%;" />
 
 注意，图中的 sentinelRedisInstance 表示的是主服务器类型，其中还有 dict *slaves 字典记录了所有复制该主服务器的从服务器，以及 dict *sentinels 记录了其它监视该主服务器的 sentinel
 
@@ -225,7 +225,7 @@ sentinel failover-timeout master2 450000
 
 下图展示了一个 Sentinel 向被它监视的两个主服务器 master1 和 master2 创建命令连接和订阅连接的例子：
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220505144143974.png" alt="image-20220505144143974" style="zoom:80%;" />
+<img src="../picture/sentinel/image-20220505144143974.png" alt="image-20220505144143974" style="zoom:80%;" />
 
 **2. 获取主服务器信息**
 
@@ -233,7 +233,7 @@ Sentinel 默认会以每十秒一次的频率，通过命令连接向被监视�
 
 例如，主服务器 master 有三个从服务器 slave0、slave1 和 slave2，并且一个 Sentinel 正在监视主服务器
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220505144934477.png" alt="image-20220505144934477" style="zoom:80%;" />
+<img src="../picture/sentinel/image-20220505144934477.png" alt="image-20220505144934477" style="zoom:80%;" />
 
 那么 Sentinel 将持续地向主服务器发送 _INFO_ 命令，并获得类似于以下内容的回复：
 
@@ -264,7 +264,7 @@ slave2: ip=127.0.0.1,port=33333,state=online,offset=43,lag=0
 
 对于我们之前列举的主服务器 master 和三个从服务器 slave0、slave1、slave2 的例子来说，Sentinel 将分别为三个从服务器创建它们各自的实例结构，并将这些结构保存到主服务器实例结构的 slaves 字典里面，如图所示：
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220507000103334.png" alt="image-20220507000103334" style="zoom:67%;" />
+<img src="../picture/sentinel/image-20220507000103334.png" alt="image-20220507000103334" style="zoom:67%;" />
 
 对比图中主服务器实例结构和从服务器实例结构之间的区别：
 
@@ -277,7 +277,7 @@ slave2: ip=127.0.0.1,port=33333,state=online,offset=43,lag=0
 
 如图所示，Sentinel 将对 slave0、slave1 和 slave2 三个从服务器分别创建命令连接和订阅连接：
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220507001811481.png" alt="image-20220507001811481" style="zoom:80%;" />
+<img src="../picture/sentinel/image-20220507001811481.png" alt="image-20220507001811481" style="zoom:80%;" />
 
 在创建命令连接之后，Sentinel 在默认情况下，会以每十秒一次的频率通过命令连接向从服务器发送 _INFO_ 命令，并获得类似于以下内容的回复：
 
@@ -310,7 +310,7 @@ slave_priority: 100
 
 根据这些信息，Sentinel 会对从服务器的实例结构进行更新，下图展示了 Sentinel 根据上面的 _INFO_ 命令回复对从服务器的实例结构进行更新之后，实例结构的样子
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220507002448752.png" alt="image-20220507002448752" style="zoom:80%;" />
+<img src="../picture/sentinel/image-20220507002448752.png" alt="image-20220507002448752" style="zoom:80%;" />
 
 **4. 向主服务器和从服务器发送信息**
 
@@ -325,9 +325,9 @@ PUBLISH __sentinel__:hello "<s_ip>,<s_port>,<s_runid>,<s_epoch>,<m_name>,<m_ip>,
 - 其中以 s_ 开头的参数记录的是 Sentinel 本身的信息
 - 而 m_ 开头的参数记录的则是主服务器的信息，如果 Sentinel 正在监视的是主服务器，那么这些参数记录的就是主服务器的信息；如果 Sentinel 正在监视的是从服务器，那么这些参数记录的就是从服务器正在复制的主服务器的信息
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220507003307797.png" alt="image-20220507003307797" style="zoom:80%;" />
+<img src="../picture/sentinel/image-20220507003307797.png" alt="image-20220507003307797" style="zoom:80%;" />
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220507003403019.png" alt="image-20220507003403019" style="zoom:80%;" />
+<img src="../picture/sentinel/image-20220507003403019.png" alt="image-20220507003403019" style="zoom:80%;" />
 
 **5. 接收来自主服务器和从服务器的频道信息**
 
@@ -339,11 +339,11 @@ SUBSCRIBE __sentinel__:hello
 
 也就是说，对于每个与 Sentinel 连接的服务器，Sentinel 既通过命令连接向服务器的 \_\_sentinel\_\_:hello 频道发送信息，又通过订阅连接从服务器的 \_\_sentinel\_\_:hello 频道接收信息
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220507003859517.png" alt="image-20220507003859517" style="zoom:80%;" />
+<img src="../picture/sentinel/image-20220507003859517.png" alt="image-20220507003859517" style="zoom:80%;" />
 
 对于监视同一个服务器的多个 Sentinel 来说，一个 Sentinel 发送的信息会被其他 Sentinel 接收到，这些信息会被用于更新其他 Sentinel 对发送信息 Sentinel 的认知，也会被用于更新其他 Sentinel 对被监视服务器的认知
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220507004253953.png" alt="image-20220507004253953" style="zoom:80%;" />
+<img src="../picture/sentinel/image-20220507004253953.png" alt="image-20220507004253953" style="zoom:80%;" />
 
 当一个 Sentinel 从 \_\_sentinel\_\_:hello 频道收到一条信息时，Sentinel 会对这条信息进行分析，提取出信息中的 Sentinel IP 地址、Sentinel 端口号、Sentinel 运行 ID 等八个参数，并进行以下检查：
 
@@ -361,7 +361,7 @@ Sentinel 为主服务器创建的实例结构中的 sentinels 字典保存了除
 
 下图展示了 Sentinel 127.0.0.1:26379 为主服务器 127.0.0.1:6379 创建的实例结构，以及结构中的 sentinels 字典：
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220507005759004.png" alt="image-20220507005759004" style="zoom:67%;" />
+<img src="../picture/sentinel/image-20220507005759004.png" alt="image-20220507005759004" style="zoom:67%;" />
 
 因为一个 Sentinel 可以通过分析接收到的频道信息来获知其他 Sentinel 的存在，并通过发送频道信息来让其他 Sentinel 知道自己的存在，所以用户在使用 Sentinel 的时候并不需要提供各个 Sentinel 的地址信息，监视同一个主服务器的多个 Sentinel 可以自动发现对方
 
@@ -369,7 +369,7 @@ Sentinel 为主服务器创建的实例结构中的 sentinels 字典保存了除
 
 当 Sentinel 通过频道信息发现一个新的 Sentinel 时，它不仅会为新 Sentinel 在 sentinels 字典中创建相应的实例结构，还会创建一个连向新 Sentinel 的命令连接，而新 Sentinel 也同样会创建连向这个 Sentinel 的命令连接，最终监视同一主服务器的多个 Sentinel 将形成互相连接的网络：
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220507011133030.png" alt="image-20220507011133030" style="zoom:80%;" />
+<img src="../picture/sentinel/image-20220507011133030.png" alt="image-20220507011133030" style="zoom:80%;" />
 
 使用命令连接的各个 Sentinel 可以通过向其他 Sentinel 发送命令请求来进行信息交换，本章接下来将对 Sentinel 实现主观下线检测和客观下线检测的原理进行介绍，这两种检测都会使用 Sentinel 之间的命令连接来进行通信
 
@@ -386,17 +386,17 @@ Sentinel 在连接主服务器和从服务器时，会同时创建命令连接�
 
 Sentinel 配置文件中的 down-after-milliseconds 选项指定了 Sentinel 判断实例进入主观下线所需的时间长度：如果一个实例在 down-after-milliseconds 毫秒内，连续向 Sentinel 返回无效回复，那么 Sentinel 会修改这个实例所对应的实例结构，在结构的 flags 属性中打开 SRI_S_DOWN 标识，以此来表示这个实例已经进入主观下线状态
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220507014130498.png" alt="image-20220507014130498" style="zoom:80%;" />
+<img src="../picture/sentinel/image-20220507014130498.png" alt="image-20220507014130498" style="zoom:80%;" />
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220507014202164.png" alt="image-20220507014202164" style="zoom:80%;" />
+<img src="../picture/sentinel/image-20220507014202164.png" alt="image-20220507014202164" style="zoom:80%;" />
 
 **7. 检查客观下线状态**
 
 当 Sentinel 将一个主服务器判断为主观下线之后，为了确认这个主服务器是否真的下线了，它会向同样监视这一主服务器的其他 Sentinel 进行询问，看它们是否也认为主服务器已经进入了下线状态 ( 可以是主观下线或者客观下线 )，当 Sentinel 从其他 Sentinel 那里接收到足够数量的已下线判断之后，Sentinel 就会将从服务器判定为客观下线，并对主服务器执行故障转移操作
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220508145718629.png" alt="image-20220508145718629" style="zoom:80%;" />
+<img src="../picture/sentinel/image-20220508145718629.png" alt="image-20220508145718629" style="zoom:80%;" />
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220508145749620.png" alt="image-20220508145749620" style="zoom:80%;" />
+<img src="../picture/sentinel/image-20220508145749620.png" alt="image-20220508145749620" style="zoom:80%;" />
 
 **8. 选举领头 Sentinel**
 
@@ -426,25 +426,25 @@ Sentinel 配置文件中的 down-after-milliseconds 选项指定了 Sentinel 判
 - 如果有多个具有相同优先级的从服务器，选出其中复制偏移量最大的从服务器
 - 如果有多个优先级最高、复制偏移量最大的从服务器，选出其中运行 ID 最小的从服务器
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220508151845152.png" alt="image-20220508151845152" style="zoom:80%;" />
+<img src="../picture/sentinel/image-20220508151845152.png" alt="image-20220508151845152" style="zoom:80%;" />
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220508151857904.png" alt="image-20220508151857904" style="zoom:80%;" />
+<img src="../picture/sentinel/image-20220508151857904.png" alt="image-20220508151857904" style="zoom:80%;" />
 
 **9.2 修改从服务器的复制目标**
 
 当新的主服务器出现之后，领头 Sentinel 下一步要做的就是，让已下线主服务器属下的所有从服务器去复制新的主服务器，这一动作可以通过向从服务器发送 _SLAVEOF_ 命令来实现
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220508152119727.png" alt="image-20220508152119727" style="zoom:80%;" />
+<img src="../picture/sentinel/image-20220508152119727.png" alt="image-20220508152119727" style="zoom:80%;" />
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220508152144378.png" alt="image-20220508152144378" style="zoom:80%;" />
+<img src="../picture/sentinel/image-20220508152144378.png" alt="image-20220508152144378" style="zoom:80%;" />
 
 **9.3 将旧的主服务器变为从服务器**
 
 故障转移操作最后要做的是，将已下线的主服务器设置为新的主服务器的从服务器
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220508152421686.png" alt="image-20220508152421686" style="zoom:80%;" />
+<img src="../picture/sentinel/image-20220508152421686.png" alt="image-20220508152421686" style="zoom:80%;" />
 
 因为旧的主服务器已经下线，所以这种设置是保存在 server1 对应的实例结构里面的，当 server1 重新上线时，Sentinel 就会向它发送 _SLAVEOF_ 命令，让它成为 server2 的从服务器
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220508152606302.png" alt="image-20220508152606302" style="zoom:80%;" />
+<img src="../picture/sentinel/image-20220508152606302.png" alt="image-20220508152606302" style="zoom:80%;" />
 

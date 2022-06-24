@@ -21,7 +21,7 @@ client.flags |= REDIS_MULTI # 打开客户端的事务标识
 - 如果客户端发送的命令为 _MULTI_、_EXEC_、_DISCARD_、_WATCH_ 四个命令的其中一个，那么服务器立即执行这个命令
 - 与此相反，如果客户端发送的命令是 _MULTI_、_EXEC_、_DISCARD_、_WATCH_ 四个命令以外的其他命令，那么服务器并不立即执行这个命令，而是将这个命令放入一个事务队列里面，然后向客户端返回 QUEUED 回复
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220428151611095.png" alt="image-20220428151611095" style="zoom:80%;" />
+<img src="../picture/transaction/image-20220428151611095.png" alt="image-20220428151611095" style="zoom:80%;" />
 
 **1.3 事务队列**
 
@@ -54,7 +54,7 @@ typedef struct multiCmd {
 }
 ```
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220428152706826.png" alt="image-20220428152706826" style="zoom:80%;" />
+<img src="../picture/transaction/image-20220428152706826.png" alt="image-20220428152706826" style="zoom:80%;" />
 
 **1.4 执行事务**
 
@@ -66,7 +66,7 @@ typedef struct multiCmd {
 
 WATCH 命令是一个乐观锁（ optimistic locking ），它可以在 EXEC 命令执行之前，监视任意数量的数据库键，并在 EXEC 命令执行时，检查被监视的键是否至少有一个已经被修改过了，如果是的话，服务器将拒绝执行事务，并向客户端返回事务执行失败的空回复 （ nil ）
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220428154627666.png" alt="image-20220428154627666" style="zoom:80%;" />
+<img src="../picture/transaction/image-20220428154627666.png" alt="image-20220428154627666" style="zoom:80%;" />
 
 在时间 T4，客户端 B 修改了 "name" 键的值，当客户端 A 在 T5 执行 EXEC 命令时，服务器会发现 WATCH 监视的键 "name" 已经被修改，因此服务器拒绝执行客户端 A 的事务，并向客户端 A 返回空回复
 
@@ -84,7 +84,7 @@ typedef struct redisDb {
 
 通过 watched_keys 字典，服务器可以清楚地知道哪些数据库键正在被监视，以及哪些客户端正在监视这些数据库键
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220428155802895.png" alt="image-20220428155802895" style="zoom:80%;" />
+<img src="../picture/transaction/image-20220428155802895.png" alt="image-20220428155802895" style="zoom:80%;" />
 
 **2.2 监视机制的触发**
 
@@ -109,7 +109,7 @@ def touchWatchKey(db, key):
 - 如果键 "age" 被修改，那么 c3 和 c10086 两个客户端的 REDIS_DIRTY_CAS 标识被打开
 - 如果键 "address" 被修改，那么 c2 和 c4 两个客户端的 REDIS_DIRTY_CAS 标识被打开
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220428161132455.png" alt="image-20220428161132455" style="zoom:80%;" />
+<img src="../picture/transaction/image-20220428161132455.png" alt="image-20220428161132455" style="zoom:80%;" />
 
 **2.3 判断事务是否安全**
 
@@ -118,7 +118,7 @@ def touchWatchKey(db, key):
 - 如果客户端的 REDIS_DIRTY_CAS 标识已经被打开，那么说明客户端所监视的键当中，至少有一个键已经被修改过了，在这种情况下，客户端提交的事务已经不再安全，所有服务器会拒绝执行客户端提交的事务
 - 如果客户端的 REDIS_DIRTY_CAS 标识没有被打开，那么说明客户端所监视的所有键都没有被修改过（或者客户端没有监视任何键），事务仍然是安全的，服务器将执行客户端提交的这个事务
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220428161658474.png" alt="image-20220428161658474" style="zoom:80%;" />
+<img src="../picture/transaction/image-20220428161658474.png" alt="image-20220428161658474" style="zoom:80%;" />
 
 
 
@@ -132,11 +132,11 @@ def touchWatchKey(db, key):
 
 **命令入队阶段出错**
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220429143056233.png" alt="image-20220429143056233" style="zoom:80%;" />
+<img src="../picture/transaction/image-20220429143056233.png" alt="image-20220429143056233" style="zoom:80%;" />
 
 **执行事务阶段出错**
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220429143449964.png" alt="image-20220429143449964" style="zoom:80%;" />
+<img src="../picture/transaction/image-20220429143449964.png" alt="image-20220429143449964" style="zoom:80%;" />
 
 Redis 的作者在事务功能的文档中解释说，不支持事务回滚是因为这种复杂的功能和 Redis 追求简单高效的设计主旨不相符，并且他认为，Redis 事务的执行时错误通常都是编程错误产生的，这种错误通常只会出现在开发环境中，而很少会在实际的生成环境中出现，所以他认为没有必要为 Redis 开发事务回滚功能
 

@@ -2,13 +2,13 @@
 
 Redis 是一个键值对数据库服务器，服务器中通常包含着任意个非空数据库，而每个非空数据库又可以包含任意个键值对，为了方便起见，我们将服务器中的非空数据库以及它们的键值对称为数据库状态
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220501151814653.png" alt="image-20220501151814653" style="zoom:80%;" />
+<img src="../picture/rdb/image-20220501151814653.png" alt="image-20220501151814653" style="zoom:80%;" />
 
 因为 Redis 是内存数据库，它将自己的数据库状态存储在内存里面，所以如果不想办法将存储在内存中的数据库状态保存到磁盘里面，那么一旦服务器进程退出，服务器中的数据库状态也会消失不见
 
 为了解决这个问题，Redis 提供了 RDB 持久化功能 ( Redis DataBase )，这个功能可以将 Redis 在内存中的数据库状态保存到磁盘里面，避免数据意外丢失，RDB 持久化功能所生成的 RDB 文件是一个经过压缩的二进制文件，通过该文件可以还原生成 RDB 文件时的数据库状态
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220501152244123.png" alt="image-20220501152244123" style="zoom:80%;" />
+<img src="../picture/rdb/image-20220501152244123.png" alt="image-20220501152244123" style="zoom:80%;" />
 
 RDB 的相关配置在配置文件 redis.conf 中的 SNAPSHOTTING 部分
 
@@ -50,7 +50,7 @@ def BGSAVE():
 - 如果服务器开启了 AOF 持久化功能，那么服务器会优先使用 AOF 文件来还原数据库状态
 - 只有在 AOF 持久化功能处于关闭状态时，服务器才会使用 RDB 文件来还原数据库状态
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220501153956478.png" alt="image-20220501153956478" style="zoom:80%;" />
+<img src="../picture/rdb/image-20220501153956478.png" alt="image-20220501153956478" style="zoom:80%;" />
 
 **1.1 SAVE 命令执行时的服务器状态**
 
@@ -72,7 +72,7 @@ def BGSAVE():
 
 Redis 允许用户通过设置服务器配置的 save 选项，让服务器每隔一段时间自动执行一次 _BGSAVE_ 命令，用户可以通过 save 选项设置多个保存条件，但只要其中任意一个条件被满足，服务器就会执行 _BGSAVE_ 命令
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220501160751747.png" alt="image-20220501160751747" style="zoom:80%;" />
+<img src="../picture/rdb/image-20220501160751747.png" alt="image-20220501160751747" style="zoom:80%;" />
 
 例如在 redis.conf 中提供以下配置：
 
@@ -121,7 +121,7 @@ save 60 10000
 
 那么服务器状态中的 saveparams 数组将会是下图所示的样子：
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220501163717345.png" alt="image-20220501163717345" style="zoom:80%;" />
+<img src="../picture/rdb/image-20220501163717345.png" alt="image-20220501163717345" style="zoom:80%;" />
 
 **2.2 dirty 计数器和 lastsave 属性**
 
@@ -161,7 +161,7 @@ def serverCron():
 
 **3. RDB 文件结构**
 
-<img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220501171027870.png" alt="image-20220501171027870" style="zoom:80%;" />
+<img src="../picture/rdb/image-20220501171027870.png" alt="image-20220501171027870" style="zoom:80%;" />
 
 RDB 文件的最开头是 REDIS 部分，这个部分的长度为 5 字节，保存着 "REDIS" 五个字符，通过这五个字符，程序可以在载入文件时，快速检查所载入的文件是否 RDB 文件
 
@@ -171,17 +171,17 @@ databases 部分包含零个或任意多个数据库，以及各个数据库中�
 
 - 如果服务器的数据库状态为空 ( 所有数据库都是空的 )，那么这个部分也为空，长度为 0 字节
 
-  <img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220501171932376.png" alt="image-20220501171932376" style="zoom:80%;" />
+  <img src="../picture/rdb/image-20220501171932376.png" alt="image-20220501171932376" style="zoom:80%;" />
 
 - 如果服务器的数据状态为非空 ( 有至少一个数据库非空 )，那么这个部分也为非空，根据数据库所保存键值对的数量、类型和内容不同，这个部分的长度也会有所不同
 
   例如，如果服务器的 0 号数据库和 3 号数据库非空，那么服务器将创建一个如下图所示的 RDB 文件，图中的 database 0 代表 0 号数据库中的所有键值对数据，而 database 3 则代表 3 号数据库中的所有键值对数据
 
-  <img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220501172708734.png" alt="image-20220501172708734" style="zoom:80%;" />
+  <img src="../picture/rdb/image-20220501172708734.png" alt="image-20220501172708734" style="zoom:80%;" />
 
   每个非空数据库在 RDB 文件中都可以保存为 SELECTDB、db_number、key_value_pairs 三个部分，如图所示
 
-  <img src="C:\Users\zjt\AppData\Roaming\Typora\typora-user-images\image-20220501172831246.png" alt="image-20220501172831246" style="zoom:80%;" />
+  <img src="../picture/rdb/image-20220501172831246.png" alt="image-20220501172831246" style="zoom:80%;" />
 
 EOF 常量的长度为 1 字节，这个常量标志着 RDB 文件正文内容的结束，当读入程序遇到这个值的时候，它知道所有数据库的所有键值对都已经载入完毕了
 
